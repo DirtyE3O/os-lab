@@ -1,0 +1,15 @@
+Aufgabe 1
+  b) .h Dateien sind Header Dateien die alles enthalten, was der Compiler zur Compilezeit wissen muss. Z.B. welche Methoden existieren usw..
+      Enthält Deklarationen von Funktionen, Strukturen und Konstanten.
+
+      .c Dateien enthalten die Implementierungen von Funktionen, die main() Methode und weiteres Programmcode
+
+  d) Bei jedem Anfang von einem Befehl bzw. Command.    
+  e) $@ steht für die linke Seite von :, also als Zielname und $^ für die rechte Seite von :, also alle dependencies. 
+     $< steht für das erste Item in der dependencies list.
+     %.o stegt als Platzhalter für Objektdateien und %.c für .c Dateien. 
+     $(DEPS) sind alle Header Dateien, von denen die .c-Datei abhängig ist.
+
+
+Aufgabe 2
+  b) man 2 open für System Call open und man 3 printf für die C Library Funktion
