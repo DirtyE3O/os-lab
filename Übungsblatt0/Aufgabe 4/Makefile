@@ -1,16 +1,11 @@
-CC      := cc
-CFLAGS  := -std=c11 -Wall -Wextra -O2
-SRC     := 4.c
-TARGET  := 4
+CC     = gcc
+CFLAGS = -std=c11 -Wall -Wextra -O2 -I.
 
-all: $(TARGET)
+OBJ  = 4.o
 
-$(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: run clean
-run: $(TARGET)
-	./$(TARGET)
+4: $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
 
-clean:
-	rm -f $(TARGET)
