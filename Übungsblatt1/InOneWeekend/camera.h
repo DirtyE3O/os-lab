@@ -52,19 +52,19 @@ public:
         const int image_size_in_bytes = sizeof(color) * image_width * image_height;
 
 
-        color* rendered_image = (color *)(mmap(
+        color* rendered_image = (color *)(mmap( 
             nullptr,
             image_size_in_bytes,
             PROT_READ | PROT_WRITE,
             MAP_SHARED | MAP_ANONYMOUS,
             -1, 0));
 
-        if (rendered_image == MAP_FAILED) {
+        if (rendered_image == MAP_FAILED) { 
             std::cerr << "Rendering failed" << std::endl;
             exit(1);
         }
-        std::vector<pid_t> child_pids;
-        int rows_per_process = image_height / num_processes;
+        std::vector<pid_t> child_pids; 
+        int rows_per_process = image_height / num_processes; 
         int extra_rows = image_height % num_processes;
 
         for (int proc = 0; proc < num_processes; proc++) {
@@ -73,16 +73,16 @@ public:
                 int start_row, end_row;
                 if (proc < extra_rows) {
                     start_row = proc * (rows_per_process + 1);
-                    end_row = start_row + (rows_per_process + 1);
+                    end_row = start_row + (rows_per_process);
                 }
                 else {
                     start_row = proc * rows_per_process + extra_rows;
                     end_row = start_row + rows_per_process;
                 }
                 std::clog << "Process " << proc
-                        << " rendering rows " << start_row << " to " << end_row - 1 << std::endl;
+                        << " rendering rows " << start_row << " to " << end_row<< std::endl;
 
-                for (int j = start_row; j < end_row; j++) {
+                for (int j = start_row; j <= end_row; j++) { 
                     renderLine(j, rendered_image, world);
                 }
                 exit(0);
@@ -90,7 +90,7 @@ public:
             else if (pid > 0) {
                 child_pids.push_back(pid);
             }
-            else {
+            else { 
                 std::cerr << "Fork failed!" << std::endl;
                 exit(1);
             }
@@ -104,7 +104,7 @@ public:
             }
         }
 
-        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n"; 
 
         for (int j = 0; j < image_height; j++) {
             for (int i = 0; i < image_width; i++) {
@@ -113,9 +113,9 @@ public:
             }
         }
 
-        munmap(rendered_image, image_size_in_bytes);
+        munmap(rendered_image, image_size_in_bytes); 
 
-        std::clog << "\rDone.                 \n";
+        std::clog << "\rDone.                 \n"; 
     }
 
 
