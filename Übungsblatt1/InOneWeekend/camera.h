@@ -15,7 +15,8 @@
 #include "material.h"
 #include <sys/mman.h>
 #include <unistd.h>
-
+#include <vector>
+#include <sys/wait.h>
 
 class camera {
 public:
