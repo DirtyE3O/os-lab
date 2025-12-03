@@ -62,7 +62,14 @@ uint8_t clamp(int value) {
 }
 
 int getRowSize(int width, int bitsPerPixel) {
-    return ((bitsPerPixel * width + 31) / 32) * 4;
+    int rowBytes = width * bitsPerPixel / 8;
+    int remainder = rowBytes % 4;
+
+    if (remainder == 0) {
+        return rowBytes;
+    }
+
+    return rowBytes + (4 - remainder);
 }
 
 int main(int argc, char* argv[]) {
