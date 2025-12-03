@@ -1,0 +1,40 @@
+AUFGABE 2
+
+(a)
+
+    A.bmp -> Bildbreite - hoehe = 10 Pixel, Blaue Zeilen = 4, Grüne Zeilen = 3, Rote Zeilen = 3
+    B.bmp -> Bildbreite - hoehe = 9 Pixel, Blaue Zeilen = 4, Grüne Zeilen = 3, Rote Zeilen = 3
+
+(b)
+
+    C_1.bmp: Höhe = +12 (positive) → Bottom-Up
+         Erste Zeile in Datei = unterste Zeile im Bild
+         Daten: [Grün][Schwarz][Schwarz]...[Schwarz]
+
+    C_2.bmp: Höhe = -12 (negativ) → Top-Down
+         Erste Zeile in Datei = oberste Zeile im Bild
+         Daten: [Schwarz][Schwarz]...[Schwarz][Grün]
+
+    Das Vorzeichen der Bildhöhe bestimmt die Leserichtung. Der Computer prüft das Vorzeichen und interpretiert die Daten entsprechend.
+
+(c)
+
+    C_3.bmp nutzt 1 Bit pro Pixel statt 24 Bit. Das ist viel weniger Speicher pro Pixel.
+
+
+    Bits pro Pixel = 1 (Offset 0x1C)
+    Daten-Offset = 62 (größer als 54 → Farbpalette vorhanden)
+
+    Lies die Farbpalette (Offset 54-61):
+
+    Palette[0]: 00 00 00 00 → Schwarz
+    Palette[1]: 00 FF 00 00 → Grün
+
+    Lies die Pixeldaten (ab Offset 62):
+
+    FF F0 00 00  → 11111111 1111(0000 00000000 00000000) -> Padding = 12 Pixel
+
+    BMP-Format verlangt, dass jede Bildzeile ein Vielfaches von 4 Bytes sein muss.
+
+    Bit = 0 → Palette[0] → Schwarz
+    Bit = 1 → Palette[1] → Grün

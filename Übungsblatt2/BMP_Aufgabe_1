@@ -1,0 +1,46 @@
+AUFGABE 1
+
+(a) 
+
+    Falls Big-endian -> 0x78010000 = 2013331456 Bytes =  1.88 GiB 
+    Falls Little-endian -> 0x00000178 = 376 Bytes -> stimmt mit tatsaechlichen Dateigroesse ueberein.
+
+(b) 
+
+    Header-Groesse:              40 Bytes - 0x00000028
+    Bildbreite:                10 Pixel - 0x0000000A
+    Bildhoehe:                  10 Pixel - 0x0000000A
+    Farbebenen:                1 - 0x0001
+    Bits pro Pixel:            24 Bit - 0x0018
+    Kompressionsmethode:       0 (keine Kompression) - 0x00000000
+    Bildgroesse:                 322 Bytes - 0x00000142
+    Horizontale Aufloesung:     7874 PPM - 0x00001EC2
+    Vertikale Aufloesung:       7874 PPM -0x00001EC2
+    Anzahl Farben in Palette:  0 (Default) - 0x00000000
+    Anzahl wichtige Farben:    0 (alle) - 0x00000000
+
+(c)
+
+    C_1.bmp -> Bildbreite - hoehe = 0x0000000C = 12 Pixel
+    C_2.bmp -> Bildbreite = 0x0000000C = 12 Pixel , Bildhoehe = FFFFFFF4 = -12 Pixel 
+
+    Die erste Pixelzeile im Speicher ist oben im Bild C_2.bmp. Zeilen werden von oben nach unten gespeichert.
+
+(d) 
+
+    C_1.bmp -> Bits pro pixel = 0x0018 = 24 bits, Daten-Offset = 0x00000036 = 54 bytes
+    C_2.bmp -> Bits pro pixel = 0x0018 = 24 bits, Daten-Offset = 0x00000036 = 54 bytes
+    C_3.bmp -> Bits pro pixel = 0x0001 = 1 bits,  Daten-Offset = 0x0000003E = 62 bytes 54 + 8 bytes (Farbpalette) 
+
+    00 00 00 00    → Palette[0] = Schwarz (B=0, G=0, R=0, Reserved=0)
+    00 FF 00 00    → Palette[1] = Grün    (B=0, G=255, R=0, Reserved=0)
+
+    Farbtiefe gibt an, wie viele Farben ein Pixel darstellen kann.
+
+    1 Bit pro Pixel → 2 Farben
+	8 Bit pro Pixel → 256 Farben
+	24 Bit pro Pixel → 2^24 Farben
+
+    Farbtiefe bestimmt, wie viele Farben man speichern kann.
+    24 Bit pro Pixel ist sehr üblich, weil es über 16 Mio. Farben erlaubt.
+    Wenn ein Bild nur 2 Farben hat, sieht man keinen Unterschied zwischen 1 Bit und 24 Bit, aber die Datei ist intern anders aufgebaut.
