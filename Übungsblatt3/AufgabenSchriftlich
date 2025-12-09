@@ -4,3 +4,12 @@ Aufgabe 1
       --> Ohne Wiederholungen wird es länger nicht kürzer, oder bei viel Zeichenwechsel.
   b: Für Menschen horizontal durchlaufen von links oben da mdie Bilder meistens Zeile für Zeile gespeichert werden.
      Für Autos zusätzlich 0,1,2 statt 0,1 speichern. 2 ist dann für Autos      
+
+Aufgabe 2
+  a: Zahl & 0xF0      oder 4x>> und 4x<<
+  b: Zahl kopieren und mit >> letzen 4 löschen dann eine leere zahl  mit OR 0x0Zahl und dann nochmal die erste Zahl kopieren und & 0x0F machen und nochmal ergebnis OR 0xZahl0
+  c: & 0x18
+  d: OR 0x04
+
+Aufgabe 3
+  a:  
