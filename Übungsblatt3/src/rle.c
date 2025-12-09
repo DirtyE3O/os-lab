@@ -182,20 +182,58 @@ void print_rle(RLE* rle, uint8_t counts_per_line) {
     printf("\n");
 }
 
-char* serialize_rle(RLE *rle, size_t* size) {
-    // TODO: Teilaufgabe 3
-    /**
-     * The `decode_rle` line is only added, so the function does something.
-     * You must remove it once you start implementing this function.
-     */
-     return decode_rle(rle, size);
-}
-
+char* serialize_rle(RLE *rle, size_t* out_size) {
+    
+  }
 void deserialize_rle(RLE *rle, const char *data, size_t size) {
-    // TODO: Teilaufgabe 3
-    /**
-     * The `encode_rle` line is only added, so the function does something.
-     * You must remove it once you start implementing this function.
-     */
-    encode_rle(rle, data, size);
+    if (rle->size == 1 && rle->head->count == 0) {
+        uint64_t dummy;
+        pop_head_rle(rle, &dummy);
+    }
+
+    uint8_t expected_bit = 0; // Anfang immer 0 in rle
+
+    for (size_t i = 0; i < size; i++) {
+        uint8_t byte = (uint8_t)data[i]; // sicheres Casten
+        uint8_t nibbles[2];
+        nibbles[0] = (byte >> 4) & 0x0F; // löscht dann führende 0, also mehr als 8 bit
+        nibbles[1] = byte & 0x0F;
+        
+        for (int n = 0; n < 2; n++) {
+            
+            uint8_t nibble = nibbles[n];
+
+            uint8_t B = (nibble >> 3) & 0x1; // Bittyp (0 oder 1) – wird ignoriert, da alternierend
+            uint8_t M = (nibble >> 2) & 0x1; // Mode: 0 = 2-Bit-Länge, 1 = 6-Bit-Länge
+            uint8_t count = 0;
+
+            if (M == 0) {
+                count = nibble & 0x3; // 2 bits berücksichtigt
+            } else {
+                // 6 bits
+                uint8_t next_nibble;
+                if (n == 0) {
+                    next_nibble = nibbles[1]; // nibble ist im selben byte
+                } else if (i + 1 < size) {
+                    next_nibble = ((uint8_t)data[i + 1] >> 4) & 0x0F;
+                } else {
+                    next_nibble = 0;
+                }
+
+                count = ((nibble & 0x3) << 4) | (next_nibble & 0x0F);
+
+                
+                if (n == 0) {
+                  n = 1;
+                  
+                } // nibble übersprungen da wir es schon genommen haben n->2 am ende 
+                else {i++;
+                } // gehen zu n1 vom nächsten ???????????????????????????????
+            }
+            
+            append_to_rle(rle, count);
+
+            expected_bit = expected_bit ^ 1;
+        }
+    }
 }
