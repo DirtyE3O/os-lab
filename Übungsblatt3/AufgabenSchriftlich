@@ -7,9 +7,12 @@ Aufgabe 1
 
 Aufgabe 2
   a: Zahl & 0xF0      oder 4x>> und 4x<<
-  b: Zahl kopieren und mit >> letzen 4 löschen dann eine leere zahl  mit OR 0x0Zahl und dann nochmal die erste Zahl kopieren und & 0x0F machen und nochmal ergebnis OR 0xZahl0
+  b: Zahl kopieren und mit >> letzen 4 löschen dann eine leere zahl  mit OR 0x0Zahl
+   und dann nochmal die erste Zahl kopieren und & 0x0F machen und nochmal ergebnis OR 0xZahl0
   c: & 0x18
   d: OR 0x04
 
 Aufgabe 3
-  a:  
+  a:  Wenn es mehr als 63 gleiche Zahlen gibt kann man es nicht darstellen da 6 Stellen nicht reichen
+  -> man kann aber die Reihe in mehrere Blöcke spalten und darstellen
+  Vielleicht auch aufpassen dass Serialisierung immer mit Anzahl 0 anfängt obwohl Daten mit 1 anfangen
