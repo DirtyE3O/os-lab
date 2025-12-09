@@ -5,8 +5,9 @@
 int main() {
     // Beispiel: Serialisierte RLE-Daten direkt (bereits im RLE-Format)
     //char serialized_data[] = { 0x3A, 0x30}; // Beispielwert
-    //char serialized_data[] = {0x46,0xC4,0x1D,0x50}; // Beispielwert
-    char serialized_data[] = { 0x3F, 0x01};
+    //char serialized_data[] = {0xC4,0x1D,0x50}; // 0 weg
+    //char serialized_data[] = {0x46,0xC4,0x1D,0x50}; // 0 zu viel og
+    //char serialized_data[] = { 0x3F, 0x01};
     size_t serialized_size = sizeof(serialized_data);
 
     // Neues RLE erzeugen und deserialisieren

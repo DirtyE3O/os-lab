@@ -190,8 +190,12 @@ void deserialize_rle(RLE *rle, const char *data, size_t size) {
         uint64_t dummy;
         pop_head_rle(rle, &dummy);
     }
-
+    // prüfen, ob erstes Count-Bit 1 →  0 einfügen
+    if (data[0] & 0x80) {
+        append_to_rle(rle, 0);
+    }
     uint8_t expected_bit = 0; // Anfang immer 0 in rle
+    bool jump = false;
 
     for (size_t i = 0; i < size; i++) {
         uint8_t byte = (uint8_t)data[i]; // sicheres Casten
@@ -200,9 +204,14 @@ void deserialize_rle(RLE *rle, const char *data, size_t size) {
         nibbles[1] = byte & 0x0F;
         
         for (int n = 0; n < 2; n++) {
+            if (jump == true){
+              n++;
+            }
             
             uint8_t nibble = nibbles[n];
-
+            if (i == size - 1 && nibble == 0) { // sonst 0 am ende zu viel
+                break;
+            }
             uint8_t B = (nibble >> 3) & 0x1; // Bittyp (0 oder 1) – wird ignoriert, da alternierend
             uint8_t M = (nibble >> 2) & 0x1; // Mode: 0 = 2-Bit-Länge, 1 = 6-Bit-Länge
             uint8_t count = 0;
@@ -225,15 +234,18 @@ void deserialize_rle(RLE *rle, const char *data, size_t size) {
                 
                 if (n == 0) {
                   n = 1;
+                  jump = false;
                   
                 } // nibble übersprungen da wir es schon genommen haben n->2 am ende 
-                else {i++;
-                } // gehen zu n1 vom nächsten ???????????????????????????????
+                else {jump = true;}
             }
             
             append_to_rle(rle, count);
 
             expected_bit = expected_bit ^ 1;
         }
+    }
+    if ((rle->size)%2 == 1){
+      append_to_rle(rle, 0);
     }
 }
