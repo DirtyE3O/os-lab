@@ -183,8 +183,86 @@ void print_rle(RLE* rle, uint8_t counts_per_line) {
 }
 
 char* serialize_rle(RLE *rle, size_t* out_size) {
+    if (!rle || rle->size == 0) {
+        *out_size = 0;
+        return NULL;
+    }
+
     
-  }
+    size_t max_bytes = (rle->size * 2 + 1) / 2;
+    char* data = malloc(max_bytes);
+
+    uint8_t current_bit = 0;   // Start immer bei 0
+    size_t byte_i = 0;
+    bool half = false;
+    uint8_t byte = 0;
+
+    RLENode* node = rle->head; //aktuelle rle zahl
+
+    while (node) {
+        uint8_t count;
+        uint64_t c64 = node->count;
+        if (c64 > 63) {
+            count = 63;
+        } else {
+            count = (uint8_t)c64;
+        }
+        if (count <= 3) {
+            
+            uint8_t nibble = (current_bit << 3) | (0 << 2) | (count & 0x3);
+
+            if (!half) {
+                byte = nibble << 4;
+                half = true;
+            } else {
+                byte |= nibble;
+                data[byte_i++] = byte;
+                byte = 0;
+                half = false;
+            }
+        } else {
+            
+            uint8_t high_part = (count >> 4) & 0x3;
+            uint8_t low_part = count & 0xF;
+
+            uint8_t nib1 = (current_bit << 3) | (1 << 2) | high_part;
+            uint8_t nib2 = low_part;
+
+            // nibbel 1
+            if (!half) {
+                byte = nib1 << 4;
+                half = true;
+            } else {
+                byte |= nib1;
+                data[byte_i++] = byte;
+                byte = 0;
+                half = false;
+            }
+
+            // nibbel 2
+            if (!half) {
+                byte = nib2 << 4;
+                half = true;
+            } else {
+                byte |= nib2;
+                data[byte_i++] = byte;
+                byte = 0;
+                half = false;
+            }
+        }
+
+        current_bit = current_bit ^ 1;
+        node = node->next;
+    }
+
+    if (half) {
+        data[byte_i++] = byte;
+    }
+
+    *out_size = byte_i;
+    return data;
+}
+
 void deserialize_rle(RLE *rle, const char *data, size_t size) {
     if (rle->size == 1 && rle->head->count == 0) {
         uint64_t dummy;
@@ -212,8 +290,8 @@ void deserialize_rle(RLE *rle, const char *data, size_t size) {
             if (i == size - 1 && nibble == 0) { // sonst 0 am ende zu viel
                 break;
             }
-            uint8_t B = (nibble >> 3) & 0x1; // Bittyp (0 oder 1) – wird ignoriert, da alternierend
-            uint8_t M = (nibble >> 2) & 0x1; // Mode: 0 = 2-Bit-Länge, 1 = 6-Bit-Länge
+
+            uint8_t M = (nibble >> 2) & 0x1;
             uint8_t count = 0;
 
             if (M == 0) {
