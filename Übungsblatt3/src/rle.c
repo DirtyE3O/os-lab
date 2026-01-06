@@ -20,7 +20,8 @@ static void append_to_rle(RLE* rle, uint64_t count) {
 
     if (rle->tail) {
         rle->tail->next = node;
-    } else {
+    }
+    else {
         rle->head = node;
     }
 
@@ -116,7 +117,8 @@ void encode_rle(RLE* rle, const char* data, size_t size) {
             uint8_t current_bit = (data[i] >> j) & 1;
             if (current_bit == counting_bit) {
                 rle->tail->count++;;
-            } else {
+            }
+            else {
                 append_to_rle(rle, 1);
                 counting_bit ^= 1; // Switch between 0 and 1
             }
@@ -153,7 +155,8 @@ char* decode_rle(RLE* rle, size_t* size) {
             if (bit_index == 0) {
                 byte_index++;
                 bit_index = 7;
-            } else {
+            }
+            else {
                 bit_index--;
             }
             count--;
@@ -182,79 +185,107 @@ void print_rle(RLE* rle, uint8_t counts_per_line) {
     printf("\n");
 }
 
-char* serialize_rle(RLE *rle, size_t* out_size) {
+/**
+ * Serializes the RLE structure into binary format.
+ *
+ * A = Art bit (0=zeros, 1=ones)
+ * M = Mode bit (0=short, 1=long)
+ *
+ * @param rle The RLE structure to serialize
+ * @param out_size Output size will be written here
+ * @return Serialized binary data (must be freed by caller)
+ */
+char* serialize_rle(RLE* rle, size_t* out_size) {
+    // Null check
     if (!rle || rle->size == 0) {
         *out_size = 0;
         return NULL;
     }
 
-    
-    size_t max_bytes = (rle->size * 2 + 1) / 2;
+    // Allocate memory
+    uint64_t total_bits = get_rle_total_count(rle);
+    size_t max_bytes = (size_t)((total_bits + 62) / 63) + 1;
     char* data = malloc(max_bytes);
 
-    uint8_t current_bit = 0;   // Start immer bei 0
-    size_t byte_i = 0;
-    bool half = false;
-    uint8_t byte = 0;
+    // State variables
+    uint8_t current_bit = 0;  // Current bit type (0 or 1)
+    size_t byte_i = 0;        // Output byte index
+    bool half = false;        // Is there a half byte ?
+    uint8_t byte = 0;         // Current byte
 
-    RLENode* node = rle->head; //aktuelle rle zahl
+    RLENode* node = rle->head;
 
+    // Process each node
     while (node) {
-        uint8_t count;
-        uint64_t c64 = node->count;
-        if (c64 > 63) {
-            count = 63;
-        } else {
-            count = (uint8_t)c64;
+        uint64_t remaining = node->count;
+
+        // Split large counts into chunks (max 63)
+        do {
+            // Get count (max 63)
+            uint8_t count;
+            if (remaining > 63) {
+                count = 63;
+            }
+            else {
+                count = (uint8_t)remaining;
+            }
+
+            if (count <= 3) {
+
+               uint8_t nibble = (current_bit << 3) | (0 << 2) | (count & 0x3);
+
+                // Place nibble into byte
+                if (!half) {
+                    byte = nibble << 4;  // Upper 4 bits
+                    half = true;
+                }
+                else {
+                    byte |= nibble;      // Lower 4 bits
+                    data[byte_i++] = byte;
+                    byte = 0;
+                    half = false;
+                }
+            }
+            else {
+
+                uint8_t nib1 = (current_bit << 3) | (1 << 2) | ((count >> 4) & 0x3);
+                uint8_t nib2 = count & 0xF;
+
+                // Write nibble 1
+                if (!half) {
+                    byte = nib1 << 4;
+                    half = true;
+                }
+                else {
+                    byte |= nib1;
+                    data[byte_i++] = byte;
+                    byte = 0;
+                    half = false;
+                }
+
+                // Write nibble 2
+                if (!half) {
+                    byte = nib2 << 4;
+                    half = true;
+                }
+                else {
+                    byte |= nib2;
+                    data[byte_i++] = byte;
+                    byte = 0;
+                    half = false;
+                }
+            }
+
+            remaining -= count;
         }
-        if (count <= 3) {
-            
-            uint8_t nibble = (current_bit << 3) | (0 << 2) | (count & 0x3);
+        while (remaining > 0);
 
-            if (!half) {
-                byte = nibble << 4;
-                half = true;
-            } else {
-                byte |= nibble;
-                data[byte_i++] = byte;
-                byte = 0;
-                half = false;
-            }
-        } else {
-            
-            uint8_t high_part = (count >> 4) & 0x3;
-            uint8_t low_part = count & 0xF;
-
-            uint8_t nib1 = (current_bit << 3) | (1 << 2) | high_part;
-            uint8_t nib2 = low_part;
-
-            // nibbel 1
-            if (!half) {
-                byte = nib1 << 4;
-                half = true;
-            } else {
-                byte |= nib1;
-                data[byte_i++] = byte;
-                byte = 0;
-                half = false;
-            }
-
-            // nibbel 2
-            if (!half) {
-                byte = nib2 << 4;
-                half = true;
-            } else {
-                byte |= nib2;
-                data[byte_i++] = byte;
-                byte = 0;
-                half = false;
-            }
-        }
-
-        current_bit = current_bit ^ 1;
+        // Toggle bit type for next node
+        current_bit ^= 1;
         node = node->next;
     }
 
+    // Write remaining half byte (with padding)
     if (half) {
         data[byte_i++] = byte;
     }
@@ -263,67 +294,105 @@ char* serialize_rle(RLE *rle, size_t* out_size) {
     return data;
 }
 
-void deserialize_rle(RLE *rle, const char *data, size_t size) {
+/**
+ * Deserializes binary data into an RLE structure.
+ *
+ * Performs the reverse operation of serialize. Merges consecutive
+ * nibbles with the same A bit (large counts may have been split).
+ *
+ * @param rle The RLE structure to fill
+ * @param data Binary data to deserialize
+ * @param size Size of the data
+ */
+void deserialize_rle(RLE* rle, const char* data, size_t size) {
+    if (size == 0) return;
+
+    // Remove initial [0] node (comes from create_rle)
     if (rle->size == 1 && rle->head->count == 0) {
         uint64_t dummy;
         pop_head_rle(rle, &dummy);
     }
-    // prüfen, ob erstes Count-Bit 1 →  0 einfügen
+
+    // If first bit is 1, prepend [0] (RLE always starts with zeros)
     if (data[0] & 0x80) {
         append_to_rle(rle, 0);
     }
-    uint8_t expected_bit = 0; // Anfang immer 0 in rle
-    bool jump = false;
 
+    // Track last processed bit type (for merging)
+    uint8_t last_bit;
+    if (data[0] & 0x80) {
+        last_bit = 1;
+    }
+    else {
+        last_bit = 0;
+    }
+
+    bool jump = false;  // Skip next nibble in 6-bit mode
+
+    // Process each byte
     for (size_t i = 0; i < size; i++) {
-        uint8_t byte = (uint8_t)data[i]; // sicheres Casten
-        uint8_t nibbles[2];
-        nibbles[0] = (byte >> 4) & 0x0F; // löscht dann führende 0, also mehr als 8 bit
-        nibbles[1] = byte & 0x0F;
-        
+        // Split byte into two nibbles
+        uint8_t byte = (uint8_t)data[i];
+        uint8_t nibbles[2] = {(byte >> 4) & 0x0F, byte & 0x0F};
+
+        // Process each nibble
         for (int n = 0; n < 2; n++) {
-            if (jump == true){
-              n++;
+            if (jump) {
+                jump = false;
+                continue;
             }
-            
+
             uint8_t nibble = nibbles[n];
-            if (i == size - 1 && nibble == 0) { // sonst 0 am ende zu viel
+
+            if (i == size - 1 && nibble == 0) {
                 break;
             }
 
-            uint8_t M = (nibble >> 2) & 0x1;
-            uint8_t count = 0;
+            // Extract A and M bits
+            uint8_t A = (nibble >> 3) & 0x1;  // Art bit
+            uint8_t M = (nibble >> 2) & 0x1;  // Mode bit
+            uint8_t count;
 
             if (M == 0) {
-                count = nibble & 0x3; // 2 bits berücksichtigt
-            } else {
-                // 6 bits
+                count = nibble & 0x3;
+            }
+            else {
+                // Get next nibble
                 uint8_t next_nibble;
                 if (n == 0) {
-                    next_nibble = nibbles[1]; // nibble ist im selben byte
-                } else if (i + 1 < size) {
-                    next_nibble = ((uint8_t)data[i + 1] >> 4) & 0x0F;
-                } else {
+                    next_nibble = nibbles[1];  // Same byte
+                }
+                else if (i + 1 < size) {
+                    next_nibble = ((uint8_t)data[i + 1] >> 4) & 0x0F;  // Next byte
+                }
+                else {
                     next_nibble = 0;
                 }
 
                 count = ((nibble & 0x3) << 4) | (next_nibble & 0x0F);
 
-                
                 if (n == 0) {
-                  n = 1;
-                  jump = false;
-                  
-                } // nibble übersprungen da wir es schon genommen haben n->2 am ende 
-                else {jump = true;}
+                    n = 1;  // Skip nibble in same byte
+                }
+                else {
+                    jump = true;  // Skip first nibble of next byte
+                }
             }
-            
-            append_to_rle(rle, count);
 
-            expected_bit = expected_bit ^ 1;
+            // Add to RLE (merge if same A, new node if different)
+            if (rle->size > 0 && A == last_bit) {
+                // Same bit type - add to current node (merge)
+                rle->tail->count += count;
+            }
+            else {
+                // Different bit type - create new node
+                append_to_rle(rle, count);
+                last_bit = A;
+            }
         }
     }
-    if ((rle->size)%2 == 1){
-      append_to_rle(rle, 0);
+
+    if (rle->size % 2 == 1) {
+        append_to_rle(rle, 0);
     }
 }

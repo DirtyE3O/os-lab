@@ -2,7 +2,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include "../include/rle.h"

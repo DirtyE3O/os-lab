@@ -2,17 +2,88 @@ Aufgabe 1
   a: 1H5E4L7O
      1A1D1A1D1A1D1A1D1A1D1A1D
       --> Ohne Wiederholungen wird es länger nicht kürzer, oder bei viel Zeichenwechsel.
-  b: Für Menschen horizontal durchlaufen von links oben da mdie Bilder meistens Zeile für Zeile gespeichert werden.
+  b: Für Menschen horizontal durchlaufen von links oben da die Bilder meistens Zeile für Zeile gespeichert werden.
      Für Autos zusätzlich 0,1,2 statt 0,1 speichern. 2 ist dann für Autos      
+
+--check
+  b:
+    Personen sind typischerweise vertikal orientierte Objekte - sie stehen aufrecht im Bild.
+    Wenn man die Pixel spaltenweise (vertikal) durchläuft, entstehen längere zusammenhängende Sequenzen von 0en und 1en.
+    Für Autos würde ich separate binäre Masken verwenden - eine Maske
+    für Personen und eine separate Maske für Autos. Jede Maske bleibt binär, was optimale RLE-Kompression ermöglicht
 
 Aufgabe 2
   a: Zahl & 0xF0      oder 4x>> und 4x<<
+
   b: Zahl kopieren und mit >> letzen 4 löschen dann eine leere zahl  mit OR 0x0Zahl
    und dann nochmal die erste Zahl kopieren und & 0x0F machen und nochmal ergebnis OR 0xZahl0
-  c: & 0x18
+
+   or
+
+   (x >> 4) | (x << 4)
+
+  c: & 0x18 (if we isolates the index 4 and 5)
+     (x >> 3) & 0x03 (if we get them as 2 bit number)
+
   d: OR 0x04
 
 Aufgabe 3
+
   a:  Wenn es mehr als 63 gleiche Zahlen gibt kann man es nicht darstellen da 6 Stellen nicht reichen
   -> man kann aber die Reihe in mehrere Blöcke spalten und darstellen
   Vielleicht auch aufpassen dass Serialisierung immer mit Anzahl 0 anfängt obwohl Daten mit 1 anfangen
+
+
+
+  -------------
+
+
+  TEST
+
+ 1- (64 mal 0)
+ python3 -c 'open("zeros8.bin","wb").write(b"\x00"*8)'
+ cp zeros8.bin zeros8_orig.bin
+
+ ./rle zeros8.bin -c
+ ./rle zeros8.mrl -d
+
+ md5 zeros8_orig.bin zeros8
+
+ 2- (64 mal 1)
+
+ python3 -c 'open("ff8.bin","wb").write(b"\xFF"*8)'
+ cp ff8.bin ff8_orig.bin
+
+ ./rle ff8.bin -c
+ ./rle ff8.mrl -d
+
+ md5 ff8_orig.bin ff8
+
+ 3-
+
+ python3 - <<'PY'
+ data = bytes([0xAA, 0x55] * 4)
+ open("alt.bin","wb").write(data)
+ PY
+
+ cp alt.bin alt_orig.bin
+
+ ./rle alt.bin -c
+ ./rle alt.mrl -d
+
+ md5 alt_orig.bin alt
+
+
+ 4-
+
+ python3 - <<'PY'
+ import os
+ open("rand1m.bin","wb").write(os.urandom(1024*1024))
+ PY
+
+ cp rand1m.bin rand1m_orig.bin
+
+ ./rle rand1m.bin -c
+ ./rle rand1m.mrl -d
+
+ md5 rand1m_orig.bin rand1m

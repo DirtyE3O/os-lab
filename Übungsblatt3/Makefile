@@ -1,23 +1,25 @@
-CC=gcc
-CFLAGS=-I./include -Wall -Wextra -g
-DEPS = $(wildcard include/*.h)
-SRC = $(wildcard src/*.c)
+CC = gcc
+CFLAGS = -Wall -Wextra -g -Iinclude
+
 OBJDIR = obj
-OBJS = $(patsubst src/%.c, $(OBJDIR)/%.o, $(SRC))
+BINDIR = .
+BIN = rle
 
-all: myrle
+SRC = src/main.c src/rle.c
+OBJ = $(OBJDIR)/main.o $(OBJDIR)/rle.o
 
-myrle: $(OBJS)
-	$(CC) $^ -o $@ $(CFLAGS)
+all: $(BIN)
+
+$(BIN): $(OBJ)
+	$(CC) $(OBJ) -o $(BIN)
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
-$(OBJDIR)/%.o: src/%.c $(DEPS) | $(OBJDIR)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-.PHONY: clean
+$(OBJDIR)/%.o: src/%.c | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) myrle
-	rm -rf $(OBJDIR)
+	rm -rf $(OBJDIR) $(BIN)
+
+.PHONY: all clean
